@@ -102,26 +102,17 @@ class EndMenu(Scene):
 
 
 """
-Custom Classes
+Custom Game Objects
 """
 
 
 
 """
-Custom scripts
+Custom Scripts
 """
-class OnButtonPressedChangeScene(Script):
-    def __init__(self, parent, newScene):
-        super().__init__(parent)
-
-        self.newScene = newScene
-
-    def Update(self):
-        if self.parent.releasedIn == True:
-            self.parent.scene.gameManager.ChangeScene(self.newScene)
-
-
 class PlayerController(Script):
+    #Script to be attached to paddles. Handles player controls.
+
     speed = 10
 
     def __init__(self, parent, playerNum):
@@ -163,6 +154,8 @@ class PlayerController(Script):
 
 
 class PuckController(Script):
+    #script to be attached to puck. Handles puck physics and scoring
+
     def __init__(self, parent, top, bottom, paddleLeft, paddleRight, goalLeft, goalRight, scoreLeft, scoreRight):
         super().__init__(parent)
 
@@ -198,6 +191,8 @@ class PuckController(Script):
 
 
 class ScoreKeeper(Script):
+    #Checks if the max score is exeeded, if true changes scene to end menu
+
     def __init__(self, parent, maxScore, nextScene, scoreLeft, scoreRight):
         super().__init__(parent)
 
@@ -217,6 +212,8 @@ class ScoreKeeper(Script):
 Custom functions
 """
 def RandomVelocity(speed):
+    #gives the puck a random diagonal velocity when a new point is started
+
     rand = random.random()
     if rand > 0.5:
         x = speed
@@ -233,6 +230,7 @@ def RandomVelocity(speed):
 
 
 def IncreaseSpeed(velocity):
+    #increases the speed of the puck 
     increase = 0.75
     if velocity.x > 0:
         velocity.x += increase
@@ -246,6 +244,7 @@ def IncreaseSpeed(velocity):
 
 
 def ResetPuck(puck):
+    #resets puck for a new point
     screenSize = puck.scene.gameManager.screenSize
     puck.rigidBody.velocity = RandomVelocity(puck.initialSpeed)
 
@@ -253,6 +252,7 @@ def ResetPuck(puck):
 
 
 def GetUniqueColour(usedColours):
+    #returns a colour that has not been used
     colour = Colour.Random()
 
     while colour in usedColours:

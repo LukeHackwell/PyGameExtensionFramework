@@ -1,11 +1,9 @@
 import pygame as pyg
 from PongFramework import *
 
-#TODO make bounds. make colliders
-
 pyg.init()
 
-#Initialise game manager and pygame fundamental
+#Initialise game manager, screen, and allowed events
 screenSize = Vector2(1400, 800)
 screenCaption = "Pong"
 allowedEvents = [pyg.QUIT, pyg.MOUSEBUTTONUP, pyg.MOUSEBUTTONDOWN, pyg.MOUSEMOTION, pyg.KEYDOWN, pyg.KEYUP]
@@ -16,13 +14,11 @@ GM = PongGM(screenSize, screenCaption, allowedEvents)
 GM.winBGColour = Colour.black
 
 
-
-
-
 #main game loop
 while True:
     GM.clock.tick(fps)
-    #check for events
+
+    #check for pygame events
     for event in pyg.event.get():
         if event.type == pyg.QUIT:
             sys.exit()

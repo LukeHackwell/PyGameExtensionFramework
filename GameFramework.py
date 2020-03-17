@@ -3,28 +3,10 @@ import random
 import sys
 import time
 
-class Colour:
-    white = (255, 255, 255)
-    grey = (140, 140, 140)
-    black = (0, 0, 0)
-    green = (0, 249, 42)
-    blue = (19, 111, 249)
-    turqoise = (0, 255, 162)
-    red = (249, 19, 19)
-    orange = (255, 85, 0)
-    yellow = (239, 195, 21)
-    pink = (255, 0, 196)
-    purple = (171, 0, 255)
-
-
-    @staticmethod
-    def Random():
-        colours = [Colour.green, Colour.blue, Colour.red, Colour.yellow, Colour.turqoise, Colour.orange, Colour.pink, Colour.purple]
-        return colours[random.randint(0, len(colours) -1)]
-
-
 
 class Vector2:
+# Store 2D vectors
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -68,66 +50,11 @@ class Vector2:
         return Vector2(-1, 0)
 
 
-class Component():
-    def __init__(self, parent):
-        self.parent = parent
-
-
-class Script(Component):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.enabled = True
-
-    def Update(self):
-        pass
-
-
-class GameObject:
-    def __init__(self, scene):
-        #get reference to the game manager and add self to its gameObjects[]
-        self.scene = scene
-        self.scene.AppendGameObject(self)
-        self.gameManager = self.scene.gameManager
-
-        self.scripts = []
-
-        self.transform = Transform(self)
-        self.sprite = Sprite(self, None)
-        self.collider = None
-        self.rigidBody = None
-
-
-    def Update(self):
-        for script in self.scripts:
-            if script.enabled:
-                script.Update()
-
-    def Enable(self):
-        self.sprite.enabled = True
-
-        for script in self.scripts:
-            script.enabled = True
-
-        if self.collider != None:
-            self.collider.enabled = True
-
-    def Disable(self):
-        self.sprite.enabled = False
-
-        for script in self.scripts:
-            script.enabled = False
-
-        if self.collider != None:
-            self.collider.enabled = False
-
-
-class Blit:
-    def __init__(self, image, position):
-        self.image = image
-        self.position = position.Tuple()
-
-
 class GameManager:
+    """
+    Base class for the game manager. Handles the updating of physics, controls, scripts, and graphics
+    """
+
     def __init__(self, screenSize, screenCaption, allowedEvents):
         self.win =  pyg.display.set_mode(screenSize.Tuple())
         pyg.display.set_caption(screenCaption)
@@ -152,6 +79,7 @@ class GameManager:
         self.currentScene = None
 
     def GetUpdateTime(self):
+        # gets the time since the last frame update
         self.currentFrameTime = time.time()
         self.updateTime = self.currentFrameTime - self.previousFrameTime
 
@@ -164,18 +92,23 @@ class GameManager:
 
 
     def UpdateScripts(self):
+        #runs each scripts attached to each game object in the current scene
+
         gameObjects = self.currentScene.gameObjects
 
         for gameObject in gameObjects:
             gameObject.Update()
 
     def CastRigidBodies(self):
+        #casts the new position of each rigid body
+
         for gameObject in self.currentScene.gameObjects:
             if gameObject.rigidBody != None:
                 gameObject.rigidBody.Cast()
 
 
     def UpdateCollisions(self):
+        #checks if pairs of game objects have colliders and sends them to CheckForCollisions()
         gameObjects = self.currentScene.gameObjects
 
         for primObj in gameObjects:
@@ -191,6 +124,8 @@ class GameManager:
 
     @staticmethod
     def CheckForCollision(primObj, secObj):
+        #checks if the casted rigid body(s) will collide
+
         if primObj.rigidBody == None:
             primPosition = primObj.transform.position
         else:
@@ -210,6 +145,8 @@ class GameManager:
 
 
     def MoveRigidBodies(self):
+        #moves rigid bodies to their casted positions if they have no collisions
+
         for gameObject in self.currentScene.gameObjects:
             if gameObject.rigidBody != None:
                 if gameObject.collider != None:
@@ -221,7 +158,7 @@ class GameManager:
                     gameObject.rigidBody.velocity = Vector2.Zero()
 
     def UpdateWindow(self):
-        #Search through all game objects. If game object has a sprite then add this game object to the corresponsing layer of blits[]
+        #If game object has a sprite add this game object to the corresponsing layer of blits[]. Update graphics on screen
         gameObjects = self.currentScene.gameObjects
 
         for gameObject in gameObjects:
@@ -239,6 +176,8 @@ class GameManager:
 
         
 class Scene:
+    #base class for scenes 
+
     def __init__(self, gameManager):
         self.gameObjects = []
         self.gameManager = gameManager
@@ -248,6 +187,89 @@ class Scene:
     
     def RemoveGameObject(self, gameObject):
         self.gameObjects.remove(gameObject)
+
+
+class Component():
+    # base class for components attached to game objects
+
+    def __init__(self, parent):
+        self.parent = parent
+
+
+class Script(Component):
+    # base class for scripts attached to game objects
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.enabled = True
+
+    def Update(self):
+        pass
+
+
+class GameObject:
+    # base class for game objects within a scene
+
+    def __init__(self, scene):
+        #get reference to the game manager and add self to its gameObjects[]
+        self.scene = scene
+        self.scene.AppendGameObject(self)
+        self.gameManager = self.scene.gameManager
+
+        self.scripts = []
+
+        self.transform = Transform(self)
+        self.sprite = Sprite(self, None)
+        self.collider = None
+        self.rigidBody = None
+
+
+    def Update(self):
+        # calls all scripts attached to this game object
+
+        for script in self.scripts:
+            if script.enabled:
+                script.Update()
+
+
+    def Enable(self):
+        # enables all scripts and components on this game object
+
+        self.sprite.enabled = True
+
+        for script in self.scripts:
+            script.enabled = True
+
+        if self.collider != None:
+            self.collider.enabled = True
+
+        if self.rigidBody != None:
+            self.rigidBody.enabled = True
+
+    def Disable(self):
+        # disables all scripts and components on this game object
+
+        self.sprite.enabled = False
+
+        for script in self.scripts:
+            script.enabled = False
+
+        if self.collider != None:
+            self.collider.enabled = False
+
+        if self.rigidBody != None:
+            self.rigidBody.enabled = False
+
+
+class Blit:
+    # stores images that are to be printed to the screen
+
+    def __init__(self, image, position):
+        self.image = image
+        self.position = position.Tuple()
+
+
+
 
 
 class Transform (Component):
@@ -261,6 +283,7 @@ class Sprite(Component):
         super().__init__(parent)
 
         self.image = image
+        #higher layers are printed to the screen after lower layers
         self.layer = 0
         self.enabled = enabled
 
@@ -289,10 +312,10 @@ class BoxCollider(Component):
 
 
 class Box(GameObject):
-    def __init__(self, scene, topLeft, size, colour):
+    def __init__(self, scene, position, size, colour):
         super().__init__(scene)
 
-        self.transform.position = topLeft
+        self.transform.position = position
         self.size = size
 
         image = pyg.Surface((size.x, size.y))
@@ -301,8 +324,8 @@ class Box(GameObject):
 
 
 class TextBox(Box):
-    def __init__(self, scene, topLeft, size, bGColour1, text, textSize, textColour, font, textOffset, bGColour2 = None):
-        super().__init__(scene, topLeft, size, bGColour1)
+    def __init__(self, scene, position, size, bGColour1, text, textSize, textColour, font, textOffset, bGColour2 = None):
+        super().__init__(scene, position, size, bGColour1)
 
         self.bGColour1 = bGColour1
         self.bGColour2 = bGColour2
@@ -321,6 +344,8 @@ class TextBox(Box):
         self.sprite = Sprite(self, image)
 
     def UpdateText(self, text):
+        # updates sprite to display new text
+
         image = pyg.Surface(self.size.Tuple())
         image.fill(self.bGColour1)
         fontObj = pyg.font.SysFont(self.font, self.textSize)
@@ -331,8 +356,8 @@ class TextBox(Box):
 
 
 class Button(Box):
-    def __init__(self, scene, topLeft, size, bGColour1, bGColour2, text, textSize, textColour, font, textOffset):
-        super().__init__(scene, topLeft, size, bGColour1)
+    def __init__(self, scene, position, size, bGColour1, bGColour2, text, textSize, textColour, font, textOffset):
+        super().__init__(scene, position, size, bGColour1)
 
         self.pressed = False
         self.releasedIn = False
@@ -352,11 +377,15 @@ class Button(Box):
         self.sprite = self.CreateSprite(self.bGColour1)
 
     def DisableButton(self):
+        # disables the button to be pressed
+
         self.colourSwapEnabled = False
         self.sprite = self.CreateSprite(self.bGColour1)
 
 
     def CreateSprite(self, colour):
+        # creates a new sprite with a different background colour
+
         sprite = pyg.Surface(self.size.Tuple())
         sprite.fill(colour)
         fontObj = pyg.font.SysFont(self.font, self.textSize)
@@ -366,10 +395,14 @@ class Button(Box):
         return Sprite(self, sprite)
 
     def Reset(self):
+        #sets the sprite colour to the initial background colour
+
         self.sprite = self.CreateSprite(self.bGColour1)
 
 
 class CheckPressed(Script):
+    #Script to be attached to a Button object. Checks if the button is pressed by the mouse
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -388,6 +421,8 @@ class CheckPressed(Script):
 
 
 class CheckReleased(Script):
+    # Script to be attached to a Button object. Checks if the mouse is released in or out of the button.
+
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -413,7 +448,22 @@ class CheckReleased(Script):
                         parent.releasedIn = True
 
 
+class OnButtonPressedChangeScene(Script):
+    #Script to be added to Button. Changes the current scene if mouse is released within button
+
+    def __init__(self, parent, newScene):
+        super().__init__(parent)
+
+        self.newScene = newScene
+
+    def Update(self):
+        if self.parent.releasedIn == True:
+            self.parent.scene.gameManager.ChangeScene(self.newScene)
+
+
 class Counter(TextBox):
+    # counter that can be used as a score
+
     def __init__(self, scene, topLeft, size, bGColour1, initialCount, textSize, textColour, font, textOffset, bGColour2 = None):
         super().__init__(scene, topLeft, size, bGColour1, str(initialCount), textSize, textColour, font, textOffset)
 
@@ -423,4 +473,21 @@ class Counter(TextBox):
         super().UpdateText(str(self.count))
 
 
+class Colour:
+    white = (255, 255, 255)
+    grey = (140, 140, 140)
+    black = (0, 0, 0)
+    green = (0, 249, 42)
+    blue = (19, 111, 249)
+    turqoise = (0, 255, 162)
+    red = (249, 19, 19)
+    orange = (255, 85, 0)
+    yellow = (239, 195, 21)
+    pink = (255, 0, 196)
+    purple = (171, 0, 255)
 
+
+    @staticmethod
+    def Random():
+        colours = [Colour.green, Colour.blue, Colour.red, Colour.yellow, Colour.turqoise, Colour.orange, Colour.pink, Colour.purple]
+        return colours[random.randint(0, len(colours) -1)]
