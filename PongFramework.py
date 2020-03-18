@@ -13,7 +13,6 @@ class PongGM(GameManager):
         self.currentScene = StartMenu(self)
 
 
-
 """
 Scenes
 """
@@ -22,7 +21,7 @@ class StartMenu(Scene):
         super().__init__(gameManager)
 
         playButtonSize = Vector2(176, 96)
-        playButton = Button(self, gameManager.screenSize / 2 - playButtonSize / 2, playButtonSize, Colour.black, Colour.grey, "PLAY", 60, Colour.white, "Times New Roman", Vector2(10, 10))
+        playButton = Button(self, gameManager.screenSize / 2 - playButtonSize / 2, playButtonSize, Colour.black, Colour.grey, "PLAY", 60, Colour.white, pyg.font.get_default_font(), Vector2(10, 10))
         playButton.scripts.append(OnButtonPressedChangeScene(playButton, TwoPlayer(self.gameManager)))
 
 
@@ -81,7 +80,7 @@ class TwoPlayer(Scene):
         puck = Box(self, puckStartPosition, puckSize, Colour.white)
         puck.collider = BoxCollider(puck, puckSize)
         puck.rigidBody = RigidBody(puck)
-        puck.initialSpeed = 7
+        puck.initialSpeed = 9
         puck.rigidBody.velocity = RandomVelocity(puck.initialSpeed)
         puck.scripts.append(PuckController(puck, topBarrier, bottomBarrier, paddleLeft, paddleRight, goalLeft, goalRight, scoreLeft, scoreRight))
 
@@ -92,12 +91,17 @@ class TwoPlayer(Scene):
 
 
 class EndMenu(Scene):
-    def __init__(self, gameManager):
+    def __init__(self, gameManager, winner):
         super().__init__(gameManager)
 
+        boxOfftset = 150
+
         playAgainButtonSize = Vector2(370, 96)
-        playAgainButton = Button(self, gameManager.screenSize / 2 - playAgainButtonSize / 2, playAgainButtonSize, Colour.black, Colour.grey, "PLAY AGAIN", 60, Colour.white, "Times New Roman", Vector2(10, 10))
+        playAgainButton = Button(self, gameManager.screenSize / 2 - playAgainButtonSize / 2 + Vector2.Up() * boxOfftset, playAgainButtonSize , Colour.black, Colour.grey, "PLAY AGAIN", 60, Colour.white, "Times New Roman", Vector2(10, 10))
         playAgainButton.scripts.append(OnButtonPressedChangeScene(playAgainButton, TwoPlayer(self.gameManager)))
+
+        winnerTextSize = Vector2(400, 96)
+        winnerText = TextBox(self, gameManager.screenSize / 2 - winnerTextSize / 2 + Vector2.Down() * boxOfftset, winnerTextSize, Colour.black, winner, 60, Colour.Random(), "Times New Roman", Vector2(10, 10))
 
 
 
@@ -167,6 +171,8 @@ class PuckController(Script):
         self.goalR = goalRight
         self.scoreL = scoreLeft
         self.scoreR = scoreRight
+        
+        self.velocityIncrease = 1
 
     def Update(self):
         if self.parent.collider.collisions != []:
@@ -176,7 +182,7 @@ class PuckController(Script):
                     self.parent.rigidBody.velocity.y *= -1
 
                 if collision.parent == self.paddleL or collision.parent == self.paddleR:
-                    IncreaseSpeed(self.parent.rigidBody.velocity)
+                    IncreaseSpeed(self.parent.rigidBody.velocity, self.velocityIncrease)
                     self.parent.rigidBody.velocity.x *= -1
 
                 if collision.parent == self.goalL:
@@ -203,9 +209,9 @@ class ScoreKeeper(Script):
 
     def Update(self):
         if self.scoreL.count == self.maxScore:
-            self.parent.scene.gameManager.ChangeScene(EndMenu(self.parent.scene.gameManager))
+            self.parent.scene.gameManager.ChangeScene(EndMenu(self.parent.scene.gameManager, "PLAYER 1 WINS"))
         elif self.scoreR.count == self.maxScore:
-            self.parent.scene.gameManager.ChangeScene(EndMenu(self.parent.scene.gameManager))
+            self.parent.scene.gameManager.ChangeScene(EndMenu(self.parent.scene.gameManager, "PLAYER 2 WINS"))
 
 
 """
@@ -229,18 +235,17 @@ def RandomVelocity(speed):
     return Vector2(x, y)
 
 
-def IncreaseSpeed(velocity):
+def IncreaseSpeed(velocity, increaseMod):
     #increases the speed of the puck 
-    increase = 0.75
     if velocity.x > 0:
-        velocity.x += increase
+        velocity.x += increaseMod
     elif velocity.x < 0:
-        velocity.x -= increase
+        velocity.x -= increaseMod
 
     if velocity.y > 0:
-        velocity.y += increase
+        velocity.y += increaseMod
     elif velocity.y < 0:
-        velocity.y -= increase
+        velocity.y -= increaseMod
 
 
 def ResetPuck(puck):

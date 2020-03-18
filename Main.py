@@ -14,6 +14,7 @@ GM = PongGM(screenSize, screenCaption, allowedEvents)
 GM.winBGColour = Colour.black
 
 
+
 #main game loop
 while True:
     GM.clock.tick(fps)
@@ -36,7 +37,9 @@ while True:
                 GM.mousePos = Vector2(mouseX, mouseY)
                 GM.mouseDown = False
         elif event.type == pyg.KEYDOWN:
-            if event.key == pyg.K_w:
+            if event.key == pyg.K_ESCAPE:
+                sys.exit()
+            elif event.key == pyg.K_w:
                 GM.wDown = True
             elif event.key == pyg.K_s:
                 GM.sDown = True

@@ -4,6 +4,7 @@ import sys
 import time
 
 
+
 class Vector2:
 # Store 2D vectors
 
@@ -56,7 +57,7 @@ class GameManager:
     """
 
     def __init__(self, screenSize, screenCaption, allowedEvents):
-        self.win =  pyg.display.set_mode(screenSize.Tuple())
+        self.win =  pyg.display.set_mode(screenSize.Tuple(), pyg.FULLSCREEN)
         pyg.display.set_caption(screenCaption)
         self.winBGColour = Colour.white
         self.clock = pyg.time.Clock()
